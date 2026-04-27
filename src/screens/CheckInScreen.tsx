@@ -35,7 +35,7 @@ import moment from 'moment';
 import ImageView from 'react-native-image-viewing';
 import { launchCamera, launchImageLibrary } from 'react-native-image-picker';
 import PhoneInput from 'react-native-phone-number-input';
-import Snackbar from 'react-native-snackbar';
+import { Snackbar } from 'react-native-snackbar';
 import ImageResizer from 'react-native-image-resizer';
 import ImgToBase64 from 'react-native-image-base64';
 
@@ -269,7 +269,7 @@ const CheckInScreen: React.FC<Props> = ({ navigation, route }) => {
   };
 
   const validateAndSubmit = () => {
-    if (!selfieImage) return Alert.alert('Required', 'Please capture a mandatory selfie.');
+    if (!selfieImage) return Alert.alert('Required', 'Selfie is mandatory.');
     if (!outletName.trim()) return Alert.alert('Required', 'Please enter the outlet name.');
     if (!outletType) return Alert.alert('Required', 'Please select an outlet type.');
     if (!contactNumber) return Alert.alert('Required', 'Please enter a contact number.');
@@ -310,6 +310,9 @@ const CheckInScreen: React.FC<Props> = ({ navigation, route }) => {
       const allImages = [selfieBase64, ...additionalImages.map(img => img.base64)].filter(Boolean).join(',');
       formData.append('location_image', allImages);
 
+      console.log("formData", formData);
+
+
       const response = await axiosClient.post('/sales_man_tracking.php', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
@@ -317,30 +320,35 @@ const CheckInScreen: React.FC<Props> = ({ navigation, route }) => {
       console.log("response", response);
 
       if (response.data?.status === 'success') {
-        const msg = 'Check-In submitted successfully!';
-        const snack = Snackbar?.default || Snackbar;
 
-        if (snack && typeof snack.show === 'function') {
-          snack.show({
-            text: msg,
-            backgroundColor: Colors.success,
-            duration: snack.LENGTH_LONG,
-          });
-        } else if (Platform.OS === 'android') {
-          ToastAndroid.show(msg, ToastAndroid.LONG);
-        } else {
-          Alert.alert('Success', msg);
-        }
-        navigation.replace('Home');
+        navigation.replace('Home', { snackbarMsg: 'Check-In submitted successfully!' } as any)
+
       } else {
         Alert.alert('Submission Error', response.data?.message || 'The server returned an unsuccessful status.');
       }
     } catch (error: any) {
-      console.error('Check-In Submission Error:', error);
-      Alert.alert(
-        'Submission Failed',
-        error?.response?.data?.message || error?.message || 'An unexpected error occurred during submission.'
-      );
+
+      if (error?.response?.data?.status === 'Conflict') {
+        const msg =
+          error?.response?.data?.data?.[0]?.message ||
+          'You have already checked-in today.';
+
+        console.log('Conflict message:', msg);
+
+        Alert.alert(
+          'Already Checked-In',
+          msg,
+          [
+            {
+              text: 'Back to Home',
+              onPress: () => navigation.replace('Home'),
+            },
+          ]
+        );
+      } else {
+        Alert.alert('Submission Failed', error?.response?.data?.message || 'An unexpected error occurred during submission.');
+      }
+
     } finally {
       setIsLoading(false);
     }
@@ -366,7 +374,7 @@ const CheckInScreen: React.FC<Props> = ({ navigation, route }) => {
               <View style={[styles.iconBox, { backgroundColor: Colors.primaryMuted, width: 28, height: 28 }]}>
                 <CameraIcon size={14} color={Colors.primary} />
               </View>
-              <Text style={styles.labelCentered}>Mandatory Selfie</Text>
+              <Text style={styles.labelCentered}>Selfie Mandatory</Text>
             </View>
             {selfieImage ? (
               <View>
@@ -395,11 +403,11 @@ const CheckInScreen: React.FC<Props> = ({ navigation, route }) => {
               <Text style={styles.sectionTitle}>Outlet Details</Text>
             </View>
             <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Outlet Name *</Text>
+              <Text style={styles.inputLabel}>Outlet Name <Text style={[styles.inputLabel, { color: Colors.error }]}>*</Text></Text>
               <TextInput style={styles.textInput} placeholder="Enter outlet name" placeholderTextColor={Colors.textPlaceholder} value={outletName} onChangeText={setOutletName} />
             </View>
             <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Outlet Type *</Text>
+              <Text style={styles.inputLabel}>Outlet Type <Text style={[styles.inputLabel, { color: Colors.error }]}>*</Text></Text>
               <Dropdown
                 style={styles.dropdown}
                 placeholderStyle={styles.placeholder}
@@ -428,7 +436,7 @@ const CheckInScreen: React.FC<Props> = ({ navigation, route }) => {
               <TextInput style={styles.textInput} placeholder="Enter person name" placeholderTextColor={Colors.textPlaceholder} value={contactName} onChangeText={setContactName} />
             </View>
             <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Contact Number *</Text>
+              <Text style={styles.inputLabel}>Contact Number <Text style={[styles.inputLabel, { color: Colors.error }]}>*</Text></Text>
               <PhoneInput
                 ref={phoneInput}
                 defaultValue={contactNumber}

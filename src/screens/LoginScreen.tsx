@@ -157,6 +157,9 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
         });
 
         const data = response?.data?.data;
+
+        console.log("data", data);
+
         if (data?.[0]?.message) {
           Alert.alert('Login Failed', data[0].message);
         } else if (data?.[0]?.id && data?.[0]?.token) {

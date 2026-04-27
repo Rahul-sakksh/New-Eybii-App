@@ -16,7 +16,7 @@ import {
   BackHandler,
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { useFocusEffect } from '@react-navigation/native';
+import { useFocusEffect, useRoute } from '@react-navigation/native';
 import {
   LogOut,
   MapPin,
@@ -45,6 +45,7 @@ import { Fonts, FontSizes } from '../theme/fonts';
 import axiosClient from '../api/axiosClient';
 import { ENDPOINTS, API_BASE_URL } from '../api/endpoints';
 import DatePickerModal from '../components/common/DatePickerModal';
+import { Snackbar } from 'react-native-snackbar';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Home'>;
 const { width, height } = Dimensions.get('window');
@@ -82,7 +83,27 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
   const [images, setImages] = useState<any[]>([]);
   const [showDatePicker, setShowDatePicker] = useState(false);
 
+  const [snackMsg, setSnackMsg] = useState<string | null>(null);
+
   const fadeAnim = useRef(new Animated.Value(0)).current;
+
+  const route = useRoute();
+
+  console.log("route", route.params?.snackbarMsg);
+
+  useFocusEffect(
+    useCallback(() => {
+      if (route.params?.snackbarMsg) {
+        setSnackMsg(route.params.snackbarMsg);
+
+        setTimeout(() => {
+          setSnackMsg(null);
+        }, 2500);
+
+        navigation.setParams({ snackbarMsg: undefined });
+      }
+    }, [route.params?.snackbarMsg])
+  );
 
 
   useEffect(() => {
@@ -425,6 +446,12 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
         initialDate={selectedDate}
       />
 
+      {snackMsg && (
+        <View style={styles.snackbar}>
+          <Text style={styles.snackbarText}>{snackMsg}</Text>
+        </View>
+      )}
+
     </SafeAreaView>
   );
 };
@@ -446,13 +473,10 @@ const styles = StyleSheet.create({
     // borderRightWidth: 1,
     // borderRightColor: C.border,
     zIndex: 10,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.22,
-    shadowRadius: 2.22,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 }, // slightly less depth
+    shadowOpacity: 0.06, // reduced from 0.1
+    shadowRadius: 3,
 
     elevation: 3,
   },
@@ -686,6 +710,36 @@ const styles = StyleSheet.create({
     includeFontPadding: false,
     fontSize: FontSizes.base,
     color: C.white,
+  },
+  snackbar: {
+    position: 'absolute',
+    bottom: 20,
+    left: 16,
+    right: 16,
+
+    backgroundColor: '#16A34A',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+
+    borderRadius: 12, // ✅ radius
+    marginHorizontal: 10, // ✅ margin feel
+
+    // shadow (iOS)
+    shadowColor: '#000',
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 3 },
+
+    // elevation (Android)
+    elevation: 5,
+  },
+
+  snackbarText: {
+    color: '#fff',
+    textAlign: 'center',
+    fontSize: 14,
+    fontFamily: Fonts.medium,
+    includeFontPadding: false,
   },
 });
 

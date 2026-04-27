@@ -16,7 +16,7 @@ import {
   Modal,
   InteractionManager,
 } from 'react-native';
-import Snackbar from 'react-native-snackbar';
+import { Snackbar } from 'react-native-snackbar';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import {
   MapPin,
@@ -210,7 +210,7 @@ const DayCycleScreen: React.FC<Props> = ({ navigation, route }) => {
 
   const validateAndSubmit = () => {
     if (!imageBase64) {
-      Alert.alert('Required', 'Please capture a selfie to proceed.');
+      Alert.alert('Required', 'Selfie is mandatory.');
       return;
     }
     if (!location) {
@@ -248,21 +248,10 @@ const DayCycleScreen: React.FC<Props> = ({ navigation, route }) => {
 
       if (response.data) {
         const msg = isStart ? 'Day started successfully!' : 'Day ended successfully!';
-        const snack = Snackbar?.default || Snackbar;
 
-        if (snack && typeof snack.show === 'function') {
-          snack.show({
-            text: msg,
-            backgroundColor: Colors.success,
-            duration: snack.LENGTH_LONG,
-          });
-        } else if (Platform.OS === 'android') {
-          ToastAndroid.show(msg, ToastAndroid.LONG);
-        } else {
-          Alert.alert('Success', msg);
-        }
-        navigation.replace('Home');
+        navigation.replace('Home', { snackbarMsg: msg } as any);
       }
+
     } catch (error) {
       Alert.alert('Error', 'Failed to submit tracking data.');
     } finally {
@@ -291,7 +280,7 @@ const DayCycleScreen: React.FC<Props> = ({ navigation, route }) => {
               <View style={[styles.iconBox, { backgroundColor: Colors.primaryMuted }]}>
                 <CameraIcon size={16} color={Colors.primary} />
               </View>
-              <Text style={styles.labelCentered}>Mandatory Selfie</Text>
+              <Text style={styles.labelCentered}>Selfie Mandatory</Text>
             </View>
 
             {uploadImage ? (
