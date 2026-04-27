@@ -17,6 +17,7 @@ import {
   BackHandler,
   Animated,
   Image,
+  ToastAndroid,
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useFocusEffect } from '@react-navigation/native';
@@ -68,24 +69,41 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
   const passwordRef = useRef<TextInput>(null);
 
   // ─── Android back → exit app ──────────────────────────────────────────────
+  const EXIT_TIMEOUT = 2000;
+
+
+  const lastBackPress = useRef(0);
+
   useFocusEffect(
     useCallback(() => {
       const onBack = () => {
-        Alert.alert(
-          'Exit Eybii',
-          'Are you sure you want to exit?',
-          [
-            { text: 'Cancel', style: 'cancel' },
-            { text: 'Exit', style: 'destructive', onPress: () => BackHandler.exitApp() },
-          ],
-          { cancelable: false },
+        const now = Date.now();
+
+        if (lastBackPress.current && now - lastBackPress.current < EXIT_TIMEOUT) {
+          BackHandler.exitApp();
+          return true;
+        }
+
+        lastBackPress.current = now;
+
+        ToastAndroid.show(
+          'Press again to exit',
+          ToastAndroid.SHORT
         );
+
         return true;
       };
-      const subscription = BackHandler.addEventListener('hardwareBackPress', onBack);
+
+      const subscription = BackHandler.addEventListener(
+        'hardwareBackPress',
+        onBack
+      );
+
       return () => subscription.remove();
-    }, []),
+    }, [])
   );
+
+
 
   // ─── Validation ──────────────────────────────────────────────────────────
   const validate = (): boolean => {

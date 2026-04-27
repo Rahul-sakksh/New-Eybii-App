@@ -14,6 +14,7 @@ import {
   Animated,
   Image,
   BackHandler,
+  ToastAndroid,
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useFocusEffect, useRoute } from '@react-navigation/native';
@@ -85,6 +86,9 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
 
   const [snackMsg, setSnackMsg] = useState<string | null>(null);
 
+  const translateY = useRef(new Animated.Value(100)).current; // start off-screen
+  const opacity = useRef(new Animated.Value(0)).current;
+
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
   const route = useRoute();
@@ -93,11 +97,42 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
 
   useFocusEffect(
     useCallback(() => {
-      if (route.params?.snackbarMsg) {
-        setSnackMsg(route.params.snackbarMsg);
+      const msg = route.params?.snackbarMsg;
 
+      if (msg) {
+        setSnackMsg(msg);
+
+        // 🚀 animate IN
+        Animated.parallel([
+          Animated.timing(translateY, {
+            toValue: 0,
+            duration: 300,
+            useNativeDriver: true,
+          }),
+          Animated.timing(opacity, {
+            toValue: 1,
+            duration: 300,
+            useNativeDriver: true,
+          }),
+        ]).start();
+
+        // ⏳ auto hide after 2.5 sec
         setTimeout(() => {
-          setSnackMsg(null);
+          // 🚪 animate OUT
+          Animated.parallel([
+            Animated.timing(translateY, {
+              toValue: 100,
+              duration: 300,
+              useNativeDriver: true,
+            }),
+            Animated.timing(opacity, {
+              toValue: 0,
+              duration: 300,
+              useNativeDriver: true,
+            }),
+          ]).start(() => {
+            setSnackMsg(null);
+          });
         }, 2500);
 
         navigation.setParams({ snackbarMsg: undefined });
@@ -118,24 +153,43 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
   }, [])
 
 
+
+  const EXIT_TIMEOUT = 2000;
+
+
+  const lastBackPress = useRef(0);
+
   useFocusEffect(
     useCallback(() => {
       const onBack = () => {
-        Alert.alert(
-          'Exit Eybii',
-          'Are you sure you want to exit?',
-          [
-            { text: 'Cancel', style: 'cancel' },
-            { text: 'Exit', style: 'destructive', onPress: () => BackHandler.exitApp() },
-          ],
-          { cancelable: false },
+        const now = Date.now();
+
+        if (lastBackPress.current && now - lastBackPress.current < EXIT_TIMEOUT) {
+          BackHandler.exitApp();
+          return true;
+        }
+
+        lastBackPress.current = now;
+
+        ToastAndroid.show(
+          'Press again to exit',
+          ToastAndroid.SHORT
         );
+
         return true;
       };
-      const subscription = BackHandler.addEventListener('hardwareBackPress', onBack);
+
+      const subscription = BackHandler.addEventListener(
+        'hardwareBackPress',
+        onBack
+      );
+
       return () => subscription.remove();
-    }, []),
+    }, [])
   );
+
+
+
 
 
   const handleDateChange = (date: Date) => {
@@ -447,9 +501,17 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
       />
 
       {snackMsg && (
-        <View style={styles.snackbar}>
+        <Animated.View
+          style={[
+            styles.snackbar,
+            {
+              transform: [{ translateY }],
+              opacity,
+            },
+          ]}
+        >
           <Text style={styles.snackbarText}>{snackMsg}</Text>
-        </View>
+        </Animated.View>
       )}
 
     </SafeAreaView>
@@ -721,25 +783,24 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 16,
 
-    borderRadius: 12, // ✅ radius
-    marginHorizontal: 10, // ✅ margin feel
+    borderRadius: 12,
 
-    // shadow (iOS)
+    // shadow iOS
     shadowColor: '#000',
     shadowOpacity: 0.15,
     shadowRadius: 6,
     shadowOffset: { width: 0, height: 3 },
 
-    // elevation (Android)
+    // Android
     elevation: 5,
   },
 
   snackbarText: {
     color: '#fff',
-    textAlign: 'center',
     fontSize: 14,
     fontFamily: Fonts.medium,
     includeFontPadding: false,
+    textAlign: 'center',
   },
 });
 
