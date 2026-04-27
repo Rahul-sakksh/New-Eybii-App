@@ -1,9 +1,29 @@
 <resources>
 
-    <!-- Base application theme. -->
-    <style name="AppTheme" parent="Theme.AppCompat.DayNight.NoActionBar">
-        <!-- Customize your theme here. -->
+    <!-- Base application theme — Eybii light mode -->
+    <style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar">
+        <!-- EditText default style -->
         <item name="android:editTextBackground">@drawable/rn_edit_text_material</item>
+
+        <!-- StatusBar background: light slate (#F8FAFC) -->
+        <item name="android:statusBarColor">@color/colorStatusBar</item>
+        <!-- StatusBar icons: dark (for light bg) -->
+        <item name="android:windowLightStatusBar">true</item>
+
+        <!-- Bottom NavigationBar background -->
+        <item name="android:navigationBarColor">@color/colorNavigationBar</item>
+        <!-- NavigationBar icons: dark -->
+        <item name="android:windowLightNavigationBar">true</item>
+
+        <!-- Window background -->
+        <item name="android:windowBackground">@color/colorBackground</item>
     </style>
 
+    <!-- Splash Screen Launcher Theme -->
+    <style name="AppTheme.Launcher" parent="AppTheme">
+        <item name="android:windowBackground">@drawable/launch_screen</item>
+        <item name="android:statusBarColor">@color/splash_background</item>
+        <item name="android:navigationBarColor">@color/splash_background</item>
+        <item name="android:windowLightStatusBar">true</item>
+    </style>
 </resources>

@@ -1,45 +1,53 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * @format
- */
+import React, { useEffect, useState } from 'react';
+import { LogBox } from 'react-native';
+import AppNavigator from './src/navigation/AppNavigator';
+import { requestAllPermissions } from './src/utils/permissions';
+import { getData, STORAGE_KEYS } from './src/utils/storage';
+import Authentication from './src/components/Authentication';
 
-import { NewAppScreen } from '@react-native/new-app-screen';
-import { StatusBar, StyleSheet, useColorScheme, View } from 'react-native';
-import {
-  SafeAreaProvider,
-  useSafeAreaInsets,
-} from 'react-native-safe-area-context';
+// Suppress known non-critical warnings in dev
+LogBox.ignoreLogs([
+  'ViewPropTypes will be removed',
+  'AsyncStorage has been extracted',
+  'Non-serializable values were found in the navigation state',
+]);
 
-function App() {
-  const isDarkMode = useColorScheme() === 'dark';
+const App: React.FC = () => {
+  const [isInitializing, setIsInitializing] = useState(true);
+  const [initialRoute, setInitialRoute] = useState<'Login' | 'Home'>('Login');
 
-  return (
-    <SafeAreaProvider>
-      <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
-      <AppContent />
-    </SafeAreaProvider>
-  );
-}
+  useEffect(() => {
+    // Request all permissions on app launch
+    requestAllPermissions().catch(err =>
+      console.warn('[App] Permission error:', err),
+    );
 
-function AppContent() {
-  const safeAreaInsets = useSafeAreaInsets();
+    const checkLoginStatus = async () => {
+      try {
+        const loggedIn = await getData(STORAGE_KEYS.LOGGED_IN);
+        if (loggedIn === 'true') {
+          setInitialRoute('Home');
+        } else {
+          setInitialRoute('Login');
+        }
+      } catch (e) {
+        console.error('[App] Init error:', e);
+      } finally {
+        // Leave a 1-second delay for branding animation to be visible
+        setTimeout(() => {
+          setIsInitializing(false);
+        }, 1000);
+      }
+    };
 
-  return (
-    <View style={styles.container}>
-      <NewAppScreen
-        templateFileName="App.tsx"
-        safeAreaInsets={safeAreaInsets}
-      />
-    </View>
-  );
-}
+    checkLoginStatus();
+  }, []);
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-});
+  if (isInitializing) {
+    return <Authentication />;
+  }
+
+  return <AppNavigator initialRouteName={initialRoute} />;
+};
 
 export default App;

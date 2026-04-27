@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Eybii Brand Colors (Indigo Light Mode) -->
+    <color name="colorPrimary">#6366F1</color>
+    <color name="colorPrimaryDark">#4F46E5</color>
+    <color name="colorAccent">#818CF8</color>
+
+    <!-- Status Bar & Navigation Bar -->
+    <color name="colorStatusBar">#F8FAFC</color>
+    <color name="colorNavigationBar">#F8FAFC</color>
+
+    <!-- Backgrounds -->
+    <color name="colorBackground">#F8FAFC</color>
+    <color name="colorSurface">#FFFFFF</color>
+
+    <!-- Text -->
+    <color name="colorOnPrimary">#FFFFFF</color>
+    <color name="colorOnBackground">#0F172A</color>
+    <color name="splash_background">#F8FAFC</color>
+</resources>
