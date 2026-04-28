@@ -102,38 +102,39 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
       if (msg) {
         setSnackMsg(msg);
 
-        // 🚀 animate IN
-        Animated.parallel([
-          Animated.timing(translateY, {
-            toValue: 0,
-            duration: 300,
-            useNativeDriver: true,
-          }),
-          Animated.timing(opacity, {
-            toValue: 1,
-            duration: 300,
-            useNativeDriver: true,
-          }),
-        ]).start();
-
-        // ⏳ auto hide after 2.5 sec
         setTimeout(() => {
-          // 🚪 animate OUT
           Animated.parallel([
             Animated.timing(translateY, {
-              toValue: 100,
-              duration: 300,
+              toValue: 0,
+              duration: 500, // ← CHANGED FROM 300 TO 1000 (1 second)
               useNativeDriver: true,
             }),
             Animated.timing(opacity, {
-              toValue: 0,
-              duration: 300,
+              toValue: 1,
+              duration: 500, // ← CHANGED FROM 300 TO 1000 (1 second)
               useNativeDriver: true,
             }),
-          ]).start(() => {
-            setSnackMsg(null);
-          });
-        }, 2500);
+          ]).start();
+
+          // ⏳ auto hide after 2.5 sec
+          setTimeout(() => {
+            // 🚪 animate OUT
+            Animated.parallel([
+              Animated.timing(translateY, {
+                toValue: 100,
+                duration: 300,
+                useNativeDriver: true,
+              }),
+              Animated.timing(opacity, {
+                toValue: 0,
+                duration: 300,
+                useNativeDriver: true,
+              }),
+            ]).start(() => {
+              setSnackMsg(null);
+            });
+          }, 2500);
+        }, 500);
 
         navigation.setParams({ snackbarMsg: undefined });
       }
@@ -323,9 +324,9 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
   const renderHeader = () => (
     <View style={styles.header}>
       <View style={styles.headerTop}>
-        <View>
+        <View style={{ width: '70%' }}>
           <Text style={styles.greeting}>Welcome 👋</Text>
-          <Text style={styles.userName}>{userName}</Text>
+          <Text numberOfLines={1} ellipsizeMode='tail' style={styles.userName}>{userName}</Text>
         </View>
         <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
           <LogOut size={16} color={C.textMuted} strokeWidth={1.5} />
