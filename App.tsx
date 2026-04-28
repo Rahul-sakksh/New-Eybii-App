@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { LogBox, Platform } from 'react-native';
+import { LogBox, Platform, StatusBar, StyleSheet, View } from 'react-native';
 import AppNavigator from './src/navigation/AppNavigator';
 import { requestAllPermissions } from './src/utils/permissions';
 import { getData, STORAGE_KEYS } from './src/utils/storage';
@@ -7,30 +7,51 @@ import Authentication from './src/components/Authentication';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import DeviceInfo from 'react-native-device-info';
 import ForceUpdateModal from './src/components/ForceUpdateModal';
+import Colors from './src/theme/colors';
+import { SafeAreaProvider, SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
-// Suppress known non-critical warnings in dev
+// Suppress warnings
 LogBox.ignoreLogs([
   'ViewPropTypes will be removed',
   'AsyncStorage has been extracted',
   'Non-serializable values were found in the navigation state',
 ]);
 
+const AppContent = ({ initialRoute, showUpdate, storeUrl }) => {
+  const insets = useSafeAreaInsets();
+
+  return (
+    <>
+      <StatusBar
+        barStyle="light-content"
+        translucent
+        backgroundColor={Colors.primary}
+      />
+
+      <View
+        style={{
+          height: insets.top,
+          backgroundColor: Colors.primary,
+        }}
+      />
+
+      <SafeAreaView style={styles.container} edges={['bottom']}>
+        <AppNavigator initialRouteName={initialRoute} />
+        <ForceUpdateModal visible={showUpdate} storeUrl={storeUrl} />
+      </SafeAreaView>
+    </>
+  );
+};
+
 const App: React.FC = () => {
   const [isInitializing, setIsInitializing] = useState(true);
   const [initialRoute, setInitialRoute] = useState<'Login' | 'Home'>('Login');
-
-
-
-
-
 
   const APP_VERSION_KEY = 'APP_VERSION_CACHE';
 
   const [showUpdate, setShowUpdate] = useState(false);
   const [storeUrl, setStoreUrl] = useState('');
 
-
-  // 🔹 Version Compare (unchanged)
   const compareVersions = (current: string, latest: string) => {
     const cParts = current.split('.').map(n => parseInt(n, 10));
     const lParts = latest.split('.').map(n => parseInt(n, 10));
@@ -48,58 +69,40 @@ const App: React.FC = () => {
     return 0;
   };
 
-
   useEffect(() => {
     checkAppVersion();
   }, []);
 
-
-  // 🔥 MAIN FUNCTION
   const checkAppVersion = async () => {
     try {
       const currentVersion = DeviceInfo.getVersion();
       let updateData = null;
 
-      // ✅ 1. Try API Call
       try {
         const response = await fetch('https://api.sakksh.com/auth/appVersion');
-
         const json = await response.json();
 
         const data = json?.filter(
           (item: any) =>
-            item.avc_device?.toLowerCase() === (Platform.OS.toLowerCase() === 'android' ? "eybii_android" : "eybii_ios" )
+            item.avc_device?.toLowerCase() ===
+            (Platform.OS === 'android' ? 'eybii_android' : 'eybii_ios')
         )?.[0];
 
         if (data) {
           updateData = data;
-
-          // ✅ Save in AsyncStorage
           await AsyncStorage.setItem(APP_VERSION_KEY, JSON.stringify(data));
         }
-
-        console.log('API success:', data);
-      } catch (apiError) {
+      } catch {
         console.log('API failed, fallback to cache');
       }
 
-      // ✅ 2. Fallback to AsyncStorage
       if (!updateData) {
         const cached = await AsyncStorage.getItem(APP_VERSION_KEY);
-
-        if (cached) {
-          updateData = JSON.parse(cached);
-          console.log('Using cached version data:', updateData);
-        }
+        if (cached) updateData = JSON.parse(cached);
       }
 
-      // ❌ No data at all
-      if (!updateData) {
-        console.log('No version data available');
-        return;
-      }
+      if (!updateData) return;
 
-      // ✅ 3. Compare Versions
       const result = compareVersions(
         currentVersion,
         updateData.avc_version ?? '0'
@@ -111,14 +114,12 @@ const App: React.FC = () => {
       } else {
         setShowUpdate(false);
       }
-
     } catch (e) {
       console.log('Version check failed:', e);
     }
   };
 
   useEffect(() => {
-    // Request all permissions on app launch
     requestAllPermissions().catch(err =>
       console.warn('[App] Permission error:', err),
     );
@@ -126,18 +127,11 @@ const App: React.FC = () => {
     const checkLoginStatus = async () => {
       try {
         const loggedIn = await getData(STORAGE_KEYS.LOGGED_IN);
-        if (loggedIn === 'true') {
-          setInitialRoute('Home');
-        } else {
-          setInitialRoute('Login');
-        }
+        setInitialRoute(loggedIn === 'true' ? 'Home' : 'Login');
       } catch (e) {
         console.error('[App] Init error:', e);
       } finally {
-        // Leave a 1-second delay for branding animation to be visible
-        setTimeout(() => {
-          setIsInitializing(false);
-        }, 1000);
+        setTimeout(() => setIsInitializing(false), 1000);
       }
     };
 
@@ -149,13 +143,18 @@ const App: React.FC = () => {
   }
 
   return (
-    <>
-
-      <AppNavigator initialRouteName={initialRoute} />
-      <ForceUpdateModal visible={showUpdate} storeUrl={storeUrl} />
-
-    </>
-  )
+    <SafeAreaProvider>
+      <AppContent
+        initialRoute={initialRoute}
+        showUpdate={showUpdate}
+        storeUrl={storeUrl}
+      />
+    </SafeAreaProvider>
+  );
 };
+
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: '#fff' },
+});
 
 export default App;

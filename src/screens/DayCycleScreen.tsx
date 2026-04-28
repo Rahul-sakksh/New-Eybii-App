@@ -43,7 +43,6 @@ import { getData, STORAGE_KEYS } from '../utils/storage';
 import axiosClient from '../api/axiosClient';
 import Colors from '../theme/colors';
 import { Fonts } from '../theme/fonts';
-import StatusBarConfig from '../components/StatusBarConfig';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Day'>;
 
@@ -261,7 +260,6 @@ const DayCycleScreen: React.FC<Props> = ({ navigation, route }) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBarConfig />
       <NavigationBar
         title={isStart ? "Start Your Day" : "End Your Day"}
         hideCalendar
@@ -272,7 +270,7 @@ const DayCycleScreen: React.FC<Props> = ({ navigation, route }) => {
         style={{ flex: 1 }}
       >
         <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-          <ScreenTimeoutManager onTimeout={() => navigation.goBack()} />
+          <ScreenTimeoutManager onTimeout={() => navigation.goBack()} timeoutInSeconds={180} />
 
           {/* Selfie Section */}
           <View style={styles.selfieWrapper}>
@@ -301,7 +299,7 @@ const DayCycleScreen: React.FC<Props> = ({ navigation, route }) => {
 
             ) : (
               <TouchableOpacity style={styles.circularCameraBtn} onPress={openCamera}>
-                <CameraIcon size={24} color={Colors.textMuted} />
+                <CameraIcon size={24} color={'#7683f5ff'} strokeWidth={1.75} />
                 <Text style={styles.circularCameraBtnText}>Take Selfie</Text>
               </TouchableOpacity>
             )}
@@ -593,19 +591,17 @@ const styles = StyleSheet.create({
     width: 100,
     height: 100,
     borderRadius: 50,
-    backgroundColor: Colors.backgroundInput,
-    borderWidth: 1,
-    borderColor: Colors.border,
+    backgroundColor: '#e3e9faff', borderWidth: 1, borderColor: Colors.primary,
     borderStyle: 'dashed',
     justifyContent: 'center',
     alignItems: 'center',
-    gap: 6,
+    gap: 4,
   },
   circularCameraBtnText: {
     fontSize: 11,
-    fontFamily: Fonts.bold,
+    fontFamily: Fonts.bold, color: '#7683f5ff',
     includeFontPadding: false,
-    color: Colors.textMuted,
+
   },
   circularPreviewContainer: {
     width: 100,

@@ -10,7 +10,6 @@ import {
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Sun, Moon, ChevronLeft, Play, Square } from 'lucide-react-native';
 import { RootStackParamList } from '../navigation/AppNavigator';
-import StatusBarConfig from '../components/StatusBarConfig';
 import AppButton from '../components/AppButton';
 import Colors from '../theme/colors';
 import { Fonts, FontSizes } from '../theme/fonts';
@@ -97,7 +96,6 @@ const DayScreen: React.FC<Props> = ({ navigation }) => {
 
   return (
     <SafeAreaView style={styles.safe}>
-      <StatusBarConfig backgroundColor={Colors.background} />
 
       {/* Header */}
       <View style={styles.header}>

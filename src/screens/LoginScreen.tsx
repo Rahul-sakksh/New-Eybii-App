@@ -28,7 +28,6 @@ import { RootStackParamList } from '../navigation/AppNavigator';
 import { API_BASE_URL } from '../api/endpoints';
 import { storeData, STORAGE_KEYS, getData } from '../utils/storage';
 import { Fonts, FontSizes } from '../theme/fonts';
-import StatusBarConfig from '../components/StatusBarConfig';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Login'>;
 
@@ -210,7 +209,6 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
 
   return (
     <SafeAreaView style={styles.safe}>
-      <StatusBarConfig />
       <KeyboardAvoidingView
         style={styles.flex}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>

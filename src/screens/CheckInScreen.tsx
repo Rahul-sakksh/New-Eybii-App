@@ -48,7 +48,6 @@ import { getData, STORAGE_KEYS } from '../utils/storage';
 import axiosClient from '../api/axiosClient';
 import Colors from '../theme/colors';
 import { Fonts } from '../theme/fonts';
-import StatusBarConfig from '../components/StatusBarConfig';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'CheckIn'>;
 
@@ -361,11 +360,10 @@ const CheckInScreen: React.FC<Props> = ({ navigation, route }) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBarConfig />
       <NavigationBar title="Check-In" hideCalendar />
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
         <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-          <ScreenTimeoutManager onTimeout={() => navigation.goBack()} />
+          <ScreenTimeoutManager onTimeout={() => navigation.goBack()} timeoutInSeconds={180} />
 
           {/* Section 1: Mandatory Selfie (Center) */}
 
@@ -390,7 +388,7 @@ const CheckInScreen: React.FC<Props> = ({ navigation, route }) => {
               </View>
             ) : (
               <TouchableOpacity style={styles.circularCameraBtn} onPress={openSelfieCamera}>
-                <CameraIcon size={24} color={Colors.textMuted} />
+                <CameraIcon size={24} color={'#7683f5ff'} strokeWidth={1.75} />
                 <Text style={styles.circularCameraBtnText}>Take Selfie</Text>
               </TouchableOpacity>
             )}
@@ -679,9 +677,9 @@ const styles = StyleSheet.create({
     fontSize: 10, fontFamily: Fonts.bold, color: Colors.textMuted,
     includeFontPadding: false
   },
-  circularCameraBtn: { width: 90, height: 90, borderRadius: 45, backgroundColor: Colors.backgroundInput, borderWidth: 1, borderColor: Colors.border, borderStyle: 'dashed', justifyContent: 'center', alignItems: 'center', gap: 4 },
+  circularCameraBtn: { width: 90, height: 90, borderRadius: 45, backgroundColor: '#e3e9faff', borderWidth: 1, borderColor: Colors.primary, borderStyle: 'dashed', justifyContent: 'center', alignItems: 'center', gap: 3 },
   circularCameraBtnText: {
-    fontSize: 11, fontFamily: Fonts.bold, color: Colors.textMuted,
+    fontSize: 11, fontFamily: Fonts.bold, color: '#7683f5ff',
     includeFontPadding: false
   },
   circularPreviewContainer: { width: 90, height: 90, borderRadius: 45, overflow: 'hidden', position: 'relative', borderWidth: 2, borderColor: Colors.primary },

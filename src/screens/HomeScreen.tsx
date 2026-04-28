@@ -15,6 +15,8 @@ import {
   Image,
   BackHandler,
   ToastAndroid,
+  Platform,
+  RefreshControl,
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useFocusEffect, useRoute } from '@react-navigation/native';
@@ -31,7 +33,6 @@ import moment from 'moment';
 import ImageView from 'react-native-image-viewing';
 
 import { RootStackParamList } from '../navigation/AppNavigator';
-import StatusBarConfig from '../components/StatusBarConfig';
 import Colors from '../theme/colors';
 import {
   DayCycleCard,
@@ -85,6 +86,8 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
   const [showDatePicker, setShowDatePicker] = useState(false);
 
   const [snackMsg, setSnackMsg] = useState<string | null>(null);
+
+  const [refreshing, setRefreshing] = useState(false);
 
   const translateY = useRef(new Animated.Value(100)).current; // start off-screen
   const opacity = useRef(new Animated.Value(0)).current;
@@ -233,6 +236,9 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
       const response = await axiosClient.get(ENDPOINTS.TRACKING_DATA, { params });
       const data = response.data?.data;
 
+      console.log("data", data);
+
+
       if (data && Array.isArray(data)) {
         setDayStartData(null);
         setDayEndData(null);
@@ -305,6 +311,8 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
       const urls = imageUrl.split(',').map(url => ({ uri: url.startsWith('http') ? url : 'https://www.eybii.com/uploads/sales_location/' + url }));
       setImages(urls);
       setImageVisible(true);
+      if (Platform.OS === 'ios') { setLocationModalVisible(false); }
+
     }
   };
 
@@ -314,6 +322,12 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
   const onDateChange = (date: Date) => {
     setShowDatePicker(false);
     handleDateChange(date);
+  };
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await fetchTrackingData(selectedDate);
+    setRefreshing(false);
   };
 
   const resolveImage = (url: string | null) => {
@@ -350,7 +364,6 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
 
   return (
     <SafeAreaView style={styles.safe}>
-      <StatusBarConfig />
 
       {renderHeader()}
 
@@ -412,6 +425,14 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
             )}
             ListEmptyComponent={renderEmpty}
             showsVerticalScrollIndicator={false}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={onRefresh}
+                colors={[Colors.primary]}
+                tintColor={Colors.primary}
+              />
+            }
           />
         )}
       </View>

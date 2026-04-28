@@ -9,7 +9,6 @@ import {
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
-import StatusBarConfig from '../components/StatusBarConfig';
 import { Fonts, FontSizes } from '../theme/fonts';
 import { getData, STORAGE_KEYS } from '../utils/storage';
 
@@ -90,7 +89,6 @@ const SplashScreen: React.FC<Props> = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-      <StatusBarConfig backgroundColor={C.bg} barStyle="dark-content" />
 
       {/* Background glow */}
       <Animated.View style={[styles.glow, { opacity: glowOpacity }]} />
