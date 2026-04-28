@@ -317,10 +317,17 @@ export const DayCycleCard: React.FC<{
     return (
       <View style={styles.cycleCard}>
         {!dayStartEnable ? (
-          <TouchableOpacity style={styles.cycleActionBtnLarge} onPress={onPressStart}>
-            <Clock size={20} color={C.white} strokeWidth={1.8} />
-            <Text style={styles.cycleActionTextLarge}>Punch In / Day Start</Text>
-          </TouchableOpacity>
+          <View style={{ display: 'flex', flexDirection: "row", gap: 10 }}>
+            <TouchableOpacity style={styles.cycleActionBtnLarge} onPress={onPressStart}>
+              <Clock size={16} color={C.white} strokeWidth={2.5} />
+              <Text style={styles.cycleActionTextLarge}>Day Start</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={[styles.cycleActionBtnLarge, { backgroundColor: 'transparent', borderColor: C.primary, borderWidth: 1.3, shadowColor: 'transparent' }]} onPress={onPressEnd}>
+              <Clock size={16} color={C.primary} strokeWidth={2.5} />
+              <Text style={[styles.cycleActionTextLarge, { color: C.primary }]}>Day End</Text>
+            </TouchableOpacity>
+          </View>
         ) : (
           <View style={styles.activeCycleRow}>
             <View style={styles.activeInfo}>
@@ -800,22 +807,26 @@ const styles = StyleSheet.create({
   },
   cycleActionBtnLarge: {
     backgroundColor: C.primary,
-    height: 60,
-    borderRadius: 18,
+    height: 45,
+    borderRadius: 10,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 12,
+    gap: 5,
     shadowColor: C.shadow,
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 1,
-    shadowRadius: 20,
-    elevation: 10,
+    shadowOffset: {
+      width: 0,
+      height: 5,
+    },
+    shadowOpacity: 0.34,
+    shadowRadius: 6.27,
+    elevation: 4,
+    flex: 1
   },
   cycleActionTextLarge: {
     fontFamily: Fonts.bold,
     includeFontPadding: false,
-    fontSize: FontSizes.md,
+    fontSize: FontSizes.sm,
     color: C.white,
   },
   activeCycleRow: {
