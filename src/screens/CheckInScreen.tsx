@@ -362,7 +362,7 @@ const CheckInScreen: React.FC<Props> = ({ navigation, route }) => {
   return (
     <SafeAreaView style={styles.container}>
       <StatusBarConfig />
-      <NavigationBar title="Check-In" hideCalendar onBack={() => navigation.replace('Home', { snackbarMsg: 'Check-In submitted successfully!' } as any)} />
+      <NavigationBar title="Check-In" hideCalendar />
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
         <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
           <ScreenTimeoutManager onTimeout={() => navigation.goBack()} />
