@@ -15,6 +15,7 @@ import {
   KeyboardAvoidingView,
   Modal,
   InteractionManager,
+  ActivityIndicator,
 } from 'react-native';
 import { Snackbar } from 'react-native-snackbar';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -312,14 +313,22 @@ const DayCycleScreen: React.FC<Props> = ({ navigation, route }) => {
                 <MapPin size={18} color={Colors.primary} />
               </View>
               <Text style={styles.sectionTitle}>Work Location</Text>
-              <TouchableOpacity style={styles.refreshBtn} onPress={getLocation} disabled={locaLoading}>
-                <NavigationIcon size={16} color={locaLoading ? Colors.textMuted : Colors.primary} />
+              <TouchableOpacity
+                style={styles.refreshBtn}
+                onPress={getLocation}
+                disabled={locaLoading}
+              >
+                {locaLoading ? (
+                  <ActivityIndicator size="small" color={Colors.primary} />
+                ) : (
+                  <NavigationIcon size={16} color={Colors.primary} />
+                )}
               </TouchableOpacity>
             </View>
 
             <View style={styles.addressBox}>
               <Text style={styles.addressText}>
-                {locationText || 'Fetching address...'}
+                {locationText || (locaLoading ? 'Fetching address...' : 'No address found')}
               </Text>
               {location && (
                 <View style={styles.coordsRow}>
@@ -407,8 +416,9 @@ const DayCycleScreen: React.FC<Props> = ({ navigation, route }) => {
           </View>
 
           <TouchableOpacity
-            style={[styles.submitBtn, { backgroundColor: isStart ? Colors.primary : '#818CF8' }]}
+            style={[styles.submitBtn, { backgroundColor: Colors.primary, opacity: locaLoading || locationText === null || locationText === '' || imageBase64 === null || imageBase64 === '' ? 0.8 : 1 }]}
             onPress={validateAndSubmit}
+            disabled={locaLoading || locationText === null || locationText === '' || imageBase64 === null || imageBase64 === ''}
           >
             <Text style={styles.submitBtnText}>
               {isStart ? "Punch In / Day Start" : "Punch Out / Day End"}
@@ -418,7 +428,7 @@ const DayCycleScreen: React.FC<Props> = ({ navigation, route }) => {
       </KeyboardAvoidingView>
 
       <LoaderModal visible={isLoading} text="Processing..." />
-      <LoaderModal visible={locaLoading} text="Detecting Location..." />
+      {/* <LoaderModal visible={locaLoading} text="Detecting Location..." /> */}
 
       {uploadImage && (
         <ImageView

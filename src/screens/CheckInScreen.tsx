@@ -15,6 +15,7 @@ import {
   Modal,
   InteractionManager,
   ToastAndroid,
+  ActivityIndicator,
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import {
@@ -492,11 +493,15 @@ const CheckInScreen: React.FC<Props> = ({ navigation, route }) => {
               <MapPin size={18} color={Colors.primary} />
               <Text style={styles.sectionTitle}>Visit Location</Text>
               <TouchableOpacity onPress={getLocation} disabled={locaLoading}>
-                <NavigationIcon size={16} color={locaLoading ? Colors.textMuted : Colors.primary} />
+                {locaLoading ? (
+                  <ActivityIndicator size="small" color={Colors.primary} />
+                ) : (
+                  <NavigationIcon size={16} color={Colors.primary} />
+                )}
               </TouchableOpacity>
             </View>
             <View style={styles.addressBox}>
-              <Text style={styles.addressText}>{locationText || 'Fetching live address...'}</Text>
+              <Text style={styles.addressText}>{locationText || (locaLoading ? 'Fetching live address...' : 'No address found')}</Text>
             </View>
             <TouchableOpacity style={styles.editToggle} onPress={() => setIsEdit(!isEdit)}>
               <Text style={styles.editToggleText}>{isEdit ? "Hide Manual Edit" : "Manual Address Entry"}</Text>
@@ -565,14 +570,14 @@ const CheckInScreen: React.FC<Props> = ({ navigation, route }) => {
             </View>
           </View>
 
-          <TouchableOpacity style={styles.submitBtn} onPress={validateAndSubmit}>
+          <TouchableOpacity style={[styles.submitBtn, { opacity: (locaLoading || locationText === null || locationText === '' || selfieBase64 === null || selfieBase64 === '' || outletName?.trim()?.length === 0 || contactNumber?.trim()?.length === 0 || outletType?.trim()?.length === 0) ? 0.8 : 1 }]} onPress={validateAndSubmit} disabled={locaLoading || locationText === null || locationText === '' || selfieBase64 === null || selfieBase64 === '' || outletName?.trim()?.length === 0 || contactNumber?.trim()?.length === 0 || outletType?.trim()?.length === 0}>
             <Text style={styles.submitBtnText}>Submit Check-In</Text>
           </TouchableOpacity>
         </ScrollView>
       </KeyboardAvoidingView>
 
       <LoaderModal visible={isLoading} text="Submitting Check-In..." />
-      <LoaderModal visible={locaLoading} text="Detecting Location..." />
+      {/* <LoaderModal visible={locaLoading} text="Detecting Location..." /> */}
 
       {/* Image Choice Modal (Bottom Sheet Style) */}
       <Modal visible={isChoiceModalVisible} transparent animationType="slide" onRequestClose={() => setIsChoiceModalVisible(false)}>
