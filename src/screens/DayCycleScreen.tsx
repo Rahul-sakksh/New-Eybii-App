@@ -187,7 +187,23 @@ const DayCycleScreen: React.FC<Props> = ({ navigation, route }) => {
     }
   };
 
+  const hasCameraPermission = async () => {
+    if (Platform.OS === 'android') {
+      const granted = await PermissionsAndroid.request(
+        PermissionsAndroid.PERMISSIONS.CAMERA
+      );
+      return granted === PermissionsAndroid.RESULTS.GRANTED;
+    }
+    return true;
+  };
+
   const openCamera = async () => {
+    const hasPermission = await hasCameraPermission();
+    if (!hasPermission) {
+      Alert.alert('Permission Denied', 'Camera permission is required to take a selfie.');
+      return;
+    }
+
     const options = {
       mediaType: 'photo' as const,
       maxWidth: 800,

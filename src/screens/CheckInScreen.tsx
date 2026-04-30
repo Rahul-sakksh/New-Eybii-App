@@ -226,7 +226,22 @@ const CheckInScreen: React.FC<Props> = ({ navigation, route }) => {
     }
   };
 
+  const hasCameraPermission = async () => {
+    if (Platform.OS === 'android') {
+      const granted = await PermissionsAndroid.request(
+        PermissionsAndroid.PERMISSIONS.CAMERA
+      );
+      return granted === PermissionsAndroid.RESULTS.GRANTED;
+    }
+    return true;
+  };
+
   const openSelfieCamera = async () => {
+    const hasPermission = await hasCameraPermission();
+    if (!hasPermission) {
+      Alert.alert('Permission Denied', 'Camera permission is required to take a selfie.');
+      return;
+    }
     const options = { mediaType: 'photo' as const, maxWidth: 800, maxHeight: 800, quality: 0.8, cameraType: 'front' as const };
     launchCamera(options, async (res) => {
       if (res.assets?.[0]?.uri) {
@@ -244,6 +259,11 @@ const CheckInScreen: React.FC<Props> = ({ navigation, route }) => {
     const options = { mediaType: 'photo' as const, maxWidth: 800, maxHeight: 800, quality: 0.8 };
 
     if (source === 'camera') {
+      const hasPermission = await hasCameraPermission();
+      if (!hasPermission) {
+        Alert.alert('Permission Denied', 'Camera permission is required to take photos.');
+        return;
+      }
       launchCamera(options, async (res) => {
         if (res.assets?.[0]?.uri) {
           const b64 = await convertToBase64(res.assets[0].uri);
