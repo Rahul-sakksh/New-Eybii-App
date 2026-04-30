@@ -19,6 +19,7 @@ import {
   Image,
   ToastAndroid,
 } from 'react-native';
+import NetInfo from '@react-native-community/netinfo';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useFocusEffect } from '@react-navigation/native';
 import axios from 'axios';
@@ -62,6 +63,14 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
   const [loading, setLoading] = useState(false);
   const [emailFocused, setEmailFocused] = useState(false);
   const [passFocused, setPassFocused] = useState(false);
+  const [isConnected, setIsConnected] = useState<boolean | null>(true);
+
+  useEffect(() => {
+    const unsubscribe = NetInfo.addEventListener(state => {
+      setIsConnected(state.isConnected);
+    });
+    return () => unsubscribe();
+  }, []);
 
   const btnScale = useRef(new Animated.Value(1)).current;
   const emailRef = useRef<TextInput>(null);
@@ -148,6 +157,10 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
 
   // ─── Login API (FormData — matches your PHP backend) ─────────────────────
   const handleLogin = () => {
+    if (isConnected === false) {
+      Alert.alert('Internet Error', 'Check the internet connection and try again.');
+      return;
+    }
     if (!validate()) return;
 
     // Start login logic and animation in parallel
@@ -197,7 +210,7 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
         console.error('[Login] error:', error);
         Alert.alert(
           'Connection Error',
-          error?.response?.data?.message || 'Could not connect to server.',
+          'Could not connect to server. Check the internet connection and try again.',
         );
       } finally {
         setLoading(false);

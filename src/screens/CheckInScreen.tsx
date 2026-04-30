@@ -16,7 +16,9 @@ import {
   InteractionManager,
   ToastAndroid,
   ActivityIndicator,
+  Animated,
 } from 'react-native';
+import NetInfo from '@react-native-community/netinfo';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import {
   MapPin,
@@ -96,16 +98,48 @@ const CheckInScreen: React.FC<Props> = ({ navigation, route }) => {
   const [location, setLocation] = useState<{ latitude: number; longitude: number } | null>(null);
   const [currentAddress, setCurrentAddress] = useState('');
 
+  // Internet & Snackbar State
+  const [isConnected, setIsConnected] = useState<boolean | null>(true);
+  const [snackMsg, setSnackMsg] = useState<string | null>(null);
+  const translateY = React.useRef(new Animated.Value(100)).current;
+  const opacity = React.useRef(new Animated.Value(0)).current;
+
   const phoneInput = useRef<PhoneInput>(null);
+
+  useEffect(() => {
+    const unsubscribe = NetInfo.addEventListener(state => {
+      const wasOffline = isConnected === false;
+      setIsConnected(state.isConnected);
+
+      if (wasOffline && state.isConnected) {
+        // Re-fetch data when internet returns
+        fetchInitialData();
+        getLocation();
+      }
+    });
+
+    return () => unsubscribe();
+  }, [isConnected]);
 
   useEffect(() => {
     fetchInitialData();
     getLocation();
   }, []);
 
-  useEffect(() => {
-    if (selectedState) fetchCities(selectedState);
-  }, [selectedState]);
+  const showSnackbar = (msg: string) => {
+    setSnackMsg(msg);
+    Animated.parallel([
+      Animated.timing(translateY, { toValue: 0, duration: 500, useNativeDriver: true }),
+      Animated.timing(opacity, { toValue: 1, duration: 500, useNativeDriver: true }),
+    ]).start();
+
+    setTimeout(() => {
+      Animated.parallel([
+        Animated.timing(translateY, { toValue: 100, duration: 300, useNativeDriver: true }),
+        Animated.timing(opacity, { toValue: 0, duration: 300, useNativeDriver: true }),
+      ]).start(() => setSnackMsg(null));
+    }, 2500);
+  };
 
   const fetchInitialData = async () => {
     try {
@@ -135,6 +169,9 @@ const CheckInScreen: React.FC<Props> = ({ navigation, route }) => {
       if (visitsRes.data?.data) setVisitTypes(visitsRes.data.data);
     } catch (error) {
       console.error('Error fetching initial data:', error);
+      if (isConnected === false) {
+        Alert.alert('Internet Error', 'Check the internet connection and try again.');
+      }
     }
   };
 
@@ -149,6 +186,9 @@ const CheckInScreen: React.FC<Props> = ({ navigation, route }) => {
       if (response.data?.data) setCities(response.data.data);
     } catch (error) {
       console.error('Error fetching cities:', error);
+      if (isConnected === false) {
+        Alert.alert('Internet Error', 'Check the internet connection and try again.');
+      }
     }
   };
 
@@ -183,7 +223,12 @@ const CheckInScreen: React.FC<Props> = ({ navigation, route }) => {
         setCurrentAddress(addr);
         if (!isEdit) setManualAddress(addr);
       }
-    } catch (error) { console.error('Geocoding error:', error); }
+    } catch (error) {
+      console.error('Geocoding error:', error);
+      if (isConnected === false) {
+        Alert.alert('Internet Error', 'Check the internet connection and try again.');
+      }
+    }
     finally { setLocaLoading(false); }
   };
 
@@ -289,6 +334,10 @@ const CheckInScreen: React.FC<Props> = ({ navigation, route }) => {
   };
 
   const validateAndSubmit = () => {
+    if (isConnected === false) {
+      showSnackbar('Please check your internet connection');
+      return;
+    }
     if (!selfieImage) return Alert.alert('Required', 'Selfie is mandatory.');
     if (!outletName.trim()) return Alert.alert('Required', 'Please enter the outlet name.');
     if (!outletType) return Alert.alert('Required', 'Please select an outlet type.');
@@ -366,7 +415,7 @@ const CheckInScreen: React.FC<Props> = ({ navigation, route }) => {
           ]
         );
       } else {
-        Alert.alert('Submission Failed', error?.response?.data?.message || 'An unexpected error occurred during submission.');
+        Alert.alert('Submission Failed', error?.response?.data?.message || 'An unexpected error occurred during submission. Check the internet connection and try again.');
       }
 
     } finally {
@@ -590,7 +639,7 @@ const CheckInScreen: React.FC<Props> = ({ navigation, route }) => {
             </View>
           </View>
 
-          <TouchableOpacity style={[styles.submitBtn, { opacity: (locaLoading || locationText === null || locationText === '') ? 0.5 : 1 }]} onPress={validateAndSubmit} disabled={locaLoading || locationText === null || locationText === ''}>
+          <TouchableOpacity style={[styles.submitBtn, { opacity: (locaLoading) ? 0.5 : 1 }]} onPress={validateAndSubmit} disabled={locaLoading}>
             <Text style={styles.submitBtnText}>Submit Check-In</Text>
           </TouchableOpacity>
         </ScrollView>
@@ -635,6 +684,20 @@ const CheckInScreen: React.FC<Props> = ({ navigation, route }) => {
         visible={imageViewerVisible}
         onRequestClose={() => setImageViewerVisible(false)}
       />
+
+      {snackMsg && (
+        <Animated.View
+          style={[
+            styles.snackbar,
+            {
+              transform: [{ translateY }],
+              opacity,
+            },
+          ]}
+        >
+          <Text style={styles.snackbarText}>{snackMsg}</Text>
+        </Animated.View>
+      )}
     </SafeAreaView>
   );
 };
@@ -745,6 +808,29 @@ const styles = StyleSheet.create({
     includeFontPadding: false
   },
   iconBox: { justifyContent: 'center', alignItems: 'center', borderRadius: 8 },
+  snackbar: {
+    position: 'absolute',
+    bottom: 40,
+    left: 20,
+    right: 20,
+    backgroundColor: '#323232',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+  },
+  snackbarText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontFamily: Fonts.medium,
+  },
 });
 
 export default CheckInScreen;

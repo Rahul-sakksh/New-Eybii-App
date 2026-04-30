@@ -16,7 +16,9 @@ import {
   Modal,
   InteractionManager,
   ActivityIndicator,
+  Animated,
 } from 'react-native';
+import NetInfo from '@react-native-community/netinfo';
 import { Snackbar } from 'react-native-snackbar';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import {
@@ -73,16 +75,46 @@ const DayCycleScreen: React.FC<Props> = ({ navigation, route }) => {
   const [location, setLocation] = useState<{ latitude: number; longitude: number } | null>(null);
   const [currentAddress, setCurrentAddress] = useState('');
 
+  // Internet & Snackbar State
+  const [isConnected, setIsConnected] = useState<boolean | null>(true);
+  const [snackMsg, setSnackMsg] = useState<string | null>(null);
+  const translateY = React.useRef(new Animated.Value(100)).current;
+  const opacity = React.useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const unsubscribe = NetInfo.addEventListener(state => {
+      const wasOffline = isConnected === false;
+      setIsConnected(state.isConnected);
+
+      if (wasOffline && state.isConnected) {
+        // Re-fetch data when internet returns
+        fetchStates();
+        getLocation();
+      }
+    });
+
+    return () => unsubscribe();
+  }, [isConnected]);
+
   useEffect(() => {
     fetchStates();
     getLocation();
   }, []);
 
-  useEffect(() => {
-    if (selectedState) {
-      fetchCities(selectedState);
-    }
-  }, [selectedState]);
+  const showSnackbar = (msg: string) => {
+    setSnackMsg(msg);
+    Animated.parallel([
+      Animated.timing(translateY, { toValue: 0, duration: 500, useNativeDriver: true }),
+      Animated.timing(opacity, { toValue: 1, duration: 500, useNativeDriver: true }),
+    ]).start();
+
+    setTimeout(() => {
+      Animated.parallel([
+        Animated.timing(translateY, { toValue: 100, duration: 300, useNativeDriver: true }),
+        Animated.timing(opacity, { toValue: 0, duration: 300, useNativeDriver: true }),
+      ]).start(() => setSnackMsg(null));
+    }, 2500);
+  };
 
   const fetchStates = async () => {
     try {
@@ -92,6 +124,9 @@ const DayCycleScreen: React.FC<Props> = ({ navigation, route }) => {
       }
     } catch (error) {
       console.error('Error fetching states:', error);
+      if (isConnected === false) {
+        Alert.alert('Internet Error', 'Check the internet connection and try again.');
+      }
     }
   };
 
@@ -108,6 +143,9 @@ const DayCycleScreen: React.FC<Props> = ({ navigation, route }) => {
       }
     } catch (error) {
       console.error('Error fetching cities:', error);
+      if (isConnected === false) {
+        Alert.alert('Internet Error', 'Check the internet connection and try again.');
+      }
     }
   };
 
@@ -165,6 +203,9 @@ const DayCycleScreen: React.FC<Props> = ({ navigation, route }) => {
       }
     } catch (error) {
       console.error('Geocoding failure:', error);
+      if (isConnected === false) {
+        Alert.alert('Internet Error', 'Check the internet connection and try again.');
+      }
     } finally {
       setLocaLoading(false);
     }
@@ -225,6 +266,10 @@ const DayCycleScreen: React.FC<Props> = ({ navigation, route }) => {
   };
 
   const validateAndSubmit = () => {
+    if (isConnected === false) {
+      showSnackbar('Please check your internet connection');
+      return;
+    }
     if (!imageBase64) {
       Alert.alert('Required', 'Selfie is mandatory.');
       return;
@@ -269,7 +314,7 @@ const DayCycleScreen: React.FC<Props> = ({ navigation, route }) => {
       }
 
     } catch (error) {
-      Alert.alert('Error', 'Failed to submit tracking data.');
+      Alert.alert('Error', 'Failed to submit tracking data. Check the internet connection and try again.');
     } finally {
       setIsLoading(false);
     }
@@ -432,9 +477,9 @@ const DayCycleScreen: React.FC<Props> = ({ navigation, route }) => {
           </View>
 
           <TouchableOpacity
-            style={[styles.submitBtn, { backgroundColor: Colors.primary, opacity: locaLoading || locationText === null || locationText === '' ? 0.5 : 1 }]}
+            style={[styles.submitBtn, { backgroundColor: Colors.primary, opacity: (locaLoading) ? 0.5 : 1 }]}
             onPress={validateAndSubmit}
-            disabled={locaLoading || locationText === null || locationText === ''}
+            disabled={locaLoading}
           >
             <Text style={styles.submitBtnText}>
               {isStart ? "Punch In / Day Start" : "Punch Out / Day End"}
@@ -453,6 +498,20 @@ const DayCycleScreen: React.FC<Props> = ({ navigation, route }) => {
           visible={imageVisible}
           onRequestClose={() => setImageVisible(false)}
         />
+      )}
+
+      {snackMsg && (
+        <Animated.View
+          style={[
+            styles.snackbar,
+            {
+              transform: [{ translateY }],
+              opacity,
+            },
+          ]}
+        >
+          <Text style={styles.snackbarText}>{snackMsg}</Text>
+        </Animated.View>
       )}
     </SafeAreaView>
   );
@@ -694,6 +753,29 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.bold,
     includeFontPadding: false,
     color: Colors.white,
+  },
+  snackbar: {
+    position: 'absolute',
+    bottom: 40,
+    left: 20,
+    right: 20,
+    backgroundColor: '#323232',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+  },
+  snackbarText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontFamily: Fonts.medium,
   },
 });
 
