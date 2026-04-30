@@ -23,8 +23,8 @@ import {
   MapPin,
   Camera as CameraIcon,
   ChevronRight,
-  Navigation as NavigationIcon,
   X,
+  RefreshCw,
 } from 'lucide-react-native';
 import { Dropdown } from 'react-native-element-dropdown';
 import Geolocation from 'react-native-geolocation-service';
@@ -337,7 +337,7 @@ const DayCycleScreen: React.FC<Props> = ({ navigation, route }) => {
                 {locaLoading ? (
                   <ActivityIndicator size="small" color={Colors.primary} />
                 ) : (
-                  <NavigationIcon size={16} color={Colors.primary} />
+                  <RefreshCw size={18} color={Colors.primary} />
                 )}
               </TouchableOpacity>
             </View>
@@ -432,9 +432,9 @@ const DayCycleScreen: React.FC<Props> = ({ navigation, route }) => {
           </View>
 
           <TouchableOpacity
-            style={[styles.submitBtn, { backgroundColor: Colors.primary, opacity: locaLoading || locationText === null || locationText === '' || imageBase64 === null || imageBase64 === '' ? 0.8 : 1 }]}
+            style={[styles.submitBtn, { backgroundColor: Colors.primary, opacity: locaLoading || locationText === null || locationText === '' ? 0.5 : 1 }]}
             onPress={validateAndSubmit}
-            disabled={locaLoading || locationText === null || locationText === '' || imageBase64 === null || imageBase64 === ''}
+            disabled={locaLoading || locationText === null || locationText === ''}
           >
             <Text style={styles.submitBtnText}>
               {isStart ? "Punch In / Day Start" : "Punch Out / Day End"}

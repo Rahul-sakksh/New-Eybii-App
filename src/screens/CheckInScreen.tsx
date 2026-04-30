@@ -22,13 +22,13 @@ import {
   MapPin,
   Camera as CameraIcon,
   ChevronRight,
-  Navigation as NavigationIcon,
   X,
   User,
   Layout,
   FileText,
   Plus,
   Image as ImageIcon,
+  RefreshCw,
 } from 'lucide-react-native';
 import { Dropdown } from 'react-native-element-dropdown';
 import Geolocation from 'react-native-geolocation-service';
@@ -254,7 +254,7 @@ const CheckInScreen: React.FC<Props> = ({ navigation, route }) => {
     });
   };
 
-  const handlePickAdditionalImage = (source: 'camera' | 'gallery') => {
+  const handlePickAdditionalImage = async (source: 'camera' | 'gallery') => {
     setIsChoiceModalVisible(false);
     const options = { mediaType: 'photo' as const, maxWidth: 800, maxHeight: 800, quality: 0.8 };
 
@@ -516,7 +516,7 @@ const CheckInScreen: React.FC<Props> = ({ navigation, route }) => {
                 {locaLoading ? (
                   <ActivityIndicator size="small" color={Colors.primary} />
                 ) : (
-                  <NavigationIcon size={16} color={Colors.primary} />
+                  <RefreshCw size={18} color={Colors.primary} />
                 )}
               </TouchableOpacity>
             </View>
@@ -590,7 +590,7 @@ const CheckInScreen: React.FC<Props> = ({ navigation, route }) => {
             </View>
           </View>
 
-          <TouchableOpacity style={[styles.submitBtn, { opacity: (locaLoading || locationText === null || locationText === '' || selfieBase64 === null || selfieBase64 === '' || outletName?.trim()?.length === 0 || contactNumber?.trim()?.length === 0 || outletType?.trim()?.length === 0) ? 0.8 : 1 }]} onPress={validateAndSubmit} disabled={locaLoading || locationText === null || locationText === '' || selfieBase64 === null || selfieBase64 === '' || outletName?.trim()?.length === 0 || contactNumber?.trim()?.length === 0 || outletType?.trim()?.length === 0}>
+          <TouchableOpacity style={[styles.submitBtn, { opacity: (locaLoading || locationText === null || locationText === '') ? 0.5 : 1 }]} onPress={validateAndSubmit} disabled={locaLoading || locationText === null || locationText === ''}>
             <Text style={styles.submitBtnText}>Submit Check-In</Text>
           </TouchableOpacity>
         </ScrollView>
