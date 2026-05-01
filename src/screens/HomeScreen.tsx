@@ -361,7 +361,8 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
           {userCode && <Text numberOfLines={1} ellipsizeMode='tail' style={styles.userCode}>Emp_Code : ({userCode})</Text>}
         </View>
         <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
-          <LogOut size={16} color={Colors.primary} strokeWidth={1.5} />
+          <LogOut size={13} color={Colors.primary} strokeWidth={2.3} />
+          <Text style={styles.logoutText}>Logout</Text>
         </TouchableOpacity>
       </View>
 
@@ -621,12 +622,20 @@ const styles = StyleSheet.create({
   logoutBtn: {
     width: 44,
     height: 44,
-    borderRadius: 14,
+    borderRadius: 13.8,
     backgroundColor: C.bg,
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 1,
+    borderWidth: 1.2,
     borderColor: '#8c97f6ff',
+    gap: 1.5
+  },
+  logoutText: {
+    fontFamily: Fonts.bold,
+    includeFontPadding: false,
+    fontSize: 8,
+    color: C.primary,
+    letterSpacing: 0,
   },
   content: {
     flex: 1,
