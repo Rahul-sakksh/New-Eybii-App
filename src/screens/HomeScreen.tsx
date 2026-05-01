@@ -265,22 +265,36 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
     } catch (error) {
       if (!error?.response) {
         // Network error
-        Alert.alert(
-          'No Internet Connection',
-          'Please check your internet connection and try again.',
-          [
-            {
-              text: 'Retry',
-              onPress: () => fetchTrackingData(selectedDate),
-            },
-            {
-              text: 'Close App',
-              onPress: () => { setSelectedDate(new Date(new Date().setDate(new Date().getDate() - 1))); BackHandler.exitApp(); },
-              style: 'destructive',
-            },
-          ],
-          { cancelable: false }
-        );
+        if (Platform.OS === 'android') {
+          Alert.alert(
+            'No Internet Connection',
+            'Please check your internet connection and try again.',
+            [
+              {
+                text: 'Retry',
+                onPress: () => fetchTrackingData(selectedDate),
+              },
+              {
+                text: 'Close App',
+                onPress: () => { setSelectedDate(new Date(new Date().setDate(new Date().getDate() - 1))); BackHandler.exitApp(); },
+                style: 'destructive',
+              },
+            ],
+            { cancelable: false }
+          )
+        } else {
+          Alert.alert(
+            'No Internet Connection',
+            'Please check your internet connection and try again.',
+            [
+              {
+                text: 'Retry',
+                onPress: () => fetchTrackingData(selectedDate),
+              }
+            ],
+            { cancelable: false }
+          );
+        }
       } else {
         Alert.alert('Error', 'Something went wrong. Please try again.');
       }
@@ -347,7 +361,7 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
           {userCode && <Text numberOfLines={1} ellipsizeMode='tail' style={styles.userCode}>Emp_Code : ({userCode})</Text>}
         </View>
         <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
-          <LogOut size={16} color={C.textMuted} strokeWidth={1.5} />
+          <LogOut size={16} color={Colors.primary} strokeWidth={1.5} />
         </TouchableOpacity>
       </View>
 
@@ -612,7 +626,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: C.border,
+    borderColor: '#8c97f6ff',
   },
   content: {
     flex: 1,
