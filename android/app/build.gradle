@@ -82,8 +82,8 @@ android {
         applicationId "com.schoofi.echelup.eybii"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
-        versionName "1.0"
+        versionCode 69
+        versionName "1.2.9"
     }
     signingConfigs {
         debug {

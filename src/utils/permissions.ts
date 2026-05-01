@@ -1,4 +1,4 @@
-import {Platform} from 'react-native';
+import { Platform } from 'react-native';
 import {
   check,
   request,
@@ -70,17 +70,18 @@ export const requestCameraPermission =
   };
 
 // ----------- Gallery / Photo Library Permission -----------
-export const requestGalleryPermission =
-  async (): Promise<PermissionResult> => {
-    const permission = Platform.select({
-      ios: PERMISSIONS.IOS.PHOTO_LIBRARY,
-      android:
-        Number(Platform.Version) >= 33
-          ? PERMISSIONS.ANDROID.READ_MEDIA_IMAGES
-          : PERMISSIONS.ANDROID.READ_EXTERNAL_STORAGE,
-    }) as Permission;
-    return requestPermission(permission);
-  };
+export const requestGalleryPermission = async (): Promise<PermissionResult> => {
+  // On Android 13+ (API 33), the System Photo Picker is used which doesn't need permissions
+  if (Platform.OS === 'android' && Number(Platform.Version) >= 33) {
+    return 'granted';
+  }
+  const permission = Platform.select({
+    ios: PERMISSIONS.IOS.PHOTO_LIBRARY,
+    android: PERMISSIONS.ANDROID.READ_EXTERNAL_STORAGE,
+  }) as Permission;
+
+  return requestPermission(permission);
+};
 
 // ----------- Location Permission -----------
 export const requestLocationPermission =
@@ -104,8 +105,8 @@ export const requestAllPermissions = async (): Promise<{
     requestLocationPermission(),
   ]);
 
-  console.log('[Permissions]', {camera, gallery, location});
-  return {camera, gallery, location};
+  console.log('[Permissions]', { camera, gallery, location });
+  return { camera, gallery, location };
 };
 
 // ----------- Open device settings (for blocked permissions) -----------
