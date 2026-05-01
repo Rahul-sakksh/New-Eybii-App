@@ -17,6 +17,7 @@ import {
   ToastAndroid,
   ActivityIndicator,
   Animated,
+  Linking,
 } from 'react-native';
 import NetInfo from '@react-native-community/netinfo';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -36,11 +37,12 @@ import { Dropdown } from 'react-native-element-dropdown';
 import Geolocation from 'react-native-geolocation-service';
 import moment from 'moment';
 import ImageView from 'react-native-image-viewing';
-import { launchCamera, launchImageLibrary } from 'react-native-image-picker';
+import { launchImageLibrary } from 'react-native-image-picker';
 import PhoneInput from 'react-native-phone-number-input';
 import { Snackbar } from 'react-native-snackbar';
 import ImageResizer from 'react-native-image-resizer';
 import ImgToBase64 from 'react-native-image-base64';
+import CameraModal from '../components/common/CameraModal';
 
 import { RootStackParamList } from '../navigation/AppNavigator';
 import NavigationBar from '../components/common/NavigationBar';
@@ -85,10 +87,12 @@ const CheckInScreen: React.FC<Props> = ({ navigation, route }) => {
   const [isEdit, setIsEdit] = useState(false);
   const [isChoiceModalVisible, setIsChoiceModalVisible] = useState(false);
 
-  // Image State
+  // Image States
   const [selfieImage, setSelfieImage] = useState<string | null>(null);
   const [selfieBase64, setSelfieBase64] = useState<string | null>(null);
   const [additionalImages, setAdditionalImages] = useState<SelectionImage[]>([]);
+  const [isCameraModalVisible, setIsCameraModalVisible] = useState(false);
+  const [cameraPurpose, setCameraPurpose] = useState<'selfie' | 'additional'>('selfie');
   const [imageViewerVisible, setImageViewerVisible] = useState(false);
   const [imageViewerIndex, setImageViewerIndex] = useState(0);
 
@@ -125,6 +129,12 @@ const CheckInScreen: React.FC<Props> = ({ navigation, route }) => {
     fetchInitialData();
     getLocation();
   }, []);
+
+  useEffect(() => {
+    if (selectedState) {
+      fetchCities(selectedState);
+    }
+  }, [selectedState]);
 
   const showSnackbar = (msg: string) => {
     setSnackMsg(msg);
@@ -196,7 +206,23 @@ const CheckInScreen: React.FC<Props> = ({ navigation, route }) => {
     if (Platform.OS === 'android') {
       const granted = await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION);
       if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
-        Alert.alert('Permission Denied', 'Location permission is required.');
+        Alert.alert(
+          'Permission Denied',
+          'Location permission is required to fetch the current address.',
+          [
+            { text: 'Cancel', style: 'cancel' },
+            {
+              text: 'Open Settings',
+              onPress: () => {
+                if (Platform.OS === 'ios') {
+                  Linking.openURL('app-settings:');
+                } else {
+                  Linking.openSettings();
+                }
+              },
+            },
+          ]
+        );
         return;
       }
     }
@@ -282,50 +308,42 @@ const CheckInScreen: React.FC<Props> = ({ navigation, route }) => {
   };
 
   const openSelfieCamera = async () => {
-    const hasPermission = await hasCameraPermission();
-    if (!hasPermission) {
-      Alert.alert('Permission Denied', 'Camera permission is required to take a selfie.');
-      return;
-    }
-    const options = { mediaType: 'photo' as const, maxWidth: 800, maxHeight: 800, quality: 0.8, cameraType: 'front' as const };
-    launchCamera(options, async (res) => {
-      if (res.assets?.[0]?.uri) {
-        const b64 = await convertToBase64(res.assets[0].uri);
-        if (b64) {
-          setSelfieImage(res.assets[0].uri);
-          setSelfieBase64(b64);
-        }
-      }
-    });
+    setCameraPurpose('selfie');
+    setIsCameraModalVisible(true);
   };
 
   const handlePickAdditionalImage = async (source: 'camera' | 'gallery') => {
     setIsChoiceModalVisible(false);
-    const options = { mediaType: 'photo' as const, maxWidth: 800, maxHeight: 800, quality: 0.8 };
-
-    if (source === 'camera') {
-      const hasPermission = await hasCameraPermission();
-      if (!hasPermission) {
-        Alert.alert('Permission Denied', 'Camera permission is required to take photos.');
-        return;
+    
+    // On iOS, we must wait for the Modal closing animation to finish 
+    // before launching a new picker or modal, otherwise it silently fails.
+    setTimeout(() => {
+      if (source === 'camera') {
+        setCameraPurpose('additional');
+        setIsCameraModalVisible(true);
+      } else {
+        const options = { mediaType: 'photo' as const, maxWidth: 800, maxHeight: 800, quality: 0.8 };
+        launchImageLibrary(options, async (res) => {
+          if (res.assets?.[0]?.uri) {
+            const b64 = await convertToBase64(res.assets[0].uri);
+            if (b64) {
+              setAdditionalImages(prev => [...prev, { uri: res.assets![0].uri!, base64: b64 }]);
+            }
+          }
+        });
       }
-      launchCamera(options, async (res) => {
-        if (res.assets?.[0]?.uri) {
-          const b64 = await convertToBase64(res.assets[0].uri);
-          if (b64) {
-            setAdditionalImages(prev => [...prev, { uri: res.assets![0].uri!, base64: b64 }]);
-          }
-        }
-      });
-    } else {
-      launchImageLibrary(options, async (res) => {
-        if (res.assets?.[0]?.uri) {
-          const b64 = await convertToBase64(res.assets[0].uri);
-          if (b64) {
-            setAdditionalImages(prev => [...prev, { uri: res.assets![0].uri!, base64: b64 }]);
-          }
-        }
-      });
+    }, 500);
+  };
+
+  const handleCapture = async (uri: string) => {
+    const b64 = await convertToBase64(uri);
+    if (b64) {
+      if (cameraPurpose === 'selfie') {
+        setSelfieImage(uri);
+        setSelfieBase64(b64);
+      } else if (cameraPurpose === 'additional') {
+        setAdditionalImages(prev => [...prev, { uri, base64: b64 }]);
+      }
     }
   };
 
@@ -674,6 +692,13 @@ const CheckInScreen: React.FC<Props> = ({ navigation, route }) => {
           </View>
         </TouchableOpacity>
       </Modal>
+
+      <CameraModal
+        visible={isCameraModalVisible}
+        onClose={() => setIsCameraModalVisible(false)}
+        onCapture={handleCapture}
+        defaultCamera={cameraPurpose === 'selfie' ? 'front' : 'back'}
+      />
 
       <ImageView
         images={[

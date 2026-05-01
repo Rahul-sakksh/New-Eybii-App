@@ -12,6 +12,7 @@ import CheckInScreen from '../screens/CheckInScreen';
 import DayCycleScreen from '../screens/DayCycleScreen';
 
 import Colors from '../theme/colors';
+import CameraScreen from '../screens/CameraScreen';
 
 // ----------- Navigation Type Definitions -----------
 export type RootStackParamList = {
@@ -19,6 +20,7 @@ export type RootStackParamList = {
   Home: undefined;
   CheckIn: undefined;
   Day: { outletType: 'day_start' | 'day_end' };
+  Camera: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -45,6 +47,7 @@ const AppNavigator: React.FC<AppNavigatorProps> = ({ initialRouteName = 'Login' 
         <Stack.Screen name="Home" component={HomeScreen} />
         <Stack.Screen name="CheckIn" component={CheckInScreen} />
         <Stack.Screen name="Day" component={DayCycleScreen} />
+        <Stack.Screen name="Camera" component={CameraScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

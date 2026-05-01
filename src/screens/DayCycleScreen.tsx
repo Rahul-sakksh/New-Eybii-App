@@ -17,6 +17,7 @@ import {
   InteractionManager,
   ActivityIndicator,
   Animated,
+  Linking,
 } from 'react-native';
 import NetInfo from '@react-native-community/netinfo';
 import { Snackbar } from 'react-native-snackbar';
@@ -32,8 +33,7 @@ import { Dropdown } from 'react-native-element-dropdown';
 import Geolocation from 'react-native-geolocation-service';
 import moment from 'moment';
 import ImageView from 'react-native-image-viewing';
-import { launchCamera } from 'react-native-image-picker';
-
+import CameraModal from '../components/common/CameraModal';
 import ImageResizer from 'react-native-image-resizer';
 import ImgToBase64 from 'react-native-image-base64';
 
@@ -67,6 +67,7 @@ const DayCycleScreen: React.FC<Props> = ({ navigation, route }) => {
   const [uploadImage, setUploadImage] = useState<string | null>(null);
   const [imageBase64, setImageBase64] = useState<string | null>(null);
   const [imageVisible, setImageVisible] = useState(false);
+  const [isCameraModalVisible, setIsCameraModalVisible] = useState(false);
 
   // UI States
   const [isLoading, setIsLoading] = useState(false);
@@ -100,6 +101,12 @@ const DayCycleScreen: React.FC<Props> = ({ navigation, route }) => {
     fetchStates();
     getLocation();
   }, []);
+
+  useEffect(() => {
+    if (selectedState) {
+      fetchCities(selectedState);
+    }
+  }, [selectedState]);
 
   const showSnackbar = (msg: string) => {
     setSnackMsg(msg);
@@ -162,7 +169,23 @@ const DayCycleScreen: React.FC<Props> = ({ navigation, route }) => {
   const getLocation = async () => {
     const hasPermission = await hasLocationPermission();
     if (!hasPermission) {
-      Alert.alert('Permission Denied', 'Location permission is required.');
+      Alert.alert(
+        'Permission Denied',
+        'Location permission is required.',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Open Settings',
+            onPress: () => {
+              if (Platform.OS === 'ios') {
+                Linking.openURL('app-settings:');
+              } else {
+                Linking.openSettings();
+              }
+            },
+          },
+        ]
+      );
       return;
     }
 
@@ -241,28 +264,34 @@ const DayCycleScreen: React.FC<Props> = ({ navigation, route }) => {
   const openCamera = async () => {
     const hasPermission = await hasCameraPermission();
     if (!hasPermission) {
-      Alert.alert('Permission Denied', 'Camera permission is required to take a selfie.');
+      Alert.alert(
+        'Permission Denied',
+        'Camera permission is required to take a selfie.',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Open Settings',
+            onPress: () => {
+              if (Platform.OS === 'ios') {
+                Linking.openURL('app-settings:');
+              } else {
+                Linking.openSettings();
+              }
+            },
+          },
+        ]
+      );
       return;
     }
+    setIsCameraModalVisible(true);
+  };
 
-    const options = {
-      mediaType: 'photo' as const,
-      maxWidth: 800,
-      maxHeight: 800,
-      quality: 0.8,
-      cameraType: 'front' as const,
-      saveToPhotos: true,
-    };
-
-    launchCamera(options, async (response) => {
-      if (response.assets?.[0]?.uri) {
-        const b64 = await convertToBase64(response.assets[0].uri);
-        if (b64) {
-          setUploadImage(response.assets[0].uri);
-          setImageBase64(b64);
-        }
-      }
-    });
+  const handleCapture = async (uri: string) => {
+    const b64 = await convertToBase64(uri);
+    if (b64) {
+      setUploadImage(uri);
+      setImageBase64(b64);
+    }
   };
 
   const validateAndSubmit = () => {
@@ -499,6 +528,13 @@ const DayCycleScreen: React.FC<Props> = ({ navigation, route }) => {
           onRequestClose={() => setImageVisible(false)}
         />
       )}
+
+      <CameraModal
+        visible={isCameraModalVisible}
+        onClose={() => setIsCameraModalVisible(false)}
+        onCapture={handleCapture}
+        defaultCamera="front"
+      />
 
       {snackMsg && (
         <Animated.View
