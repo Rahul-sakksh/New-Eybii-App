@@ -197,6 +197,7 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
           await Promise.all([
             storeData(STORAGE_KEYS.USER_NAME, data[0].name ?? ''),
             storeData(STORAGE_KEYS.USER_ID, String(data[0].id)),
+            storeData(STORAGE_KEYS.USER_CODE, data[0].emp_code),
             storeData(STORAGE_KEYS.TOKEN, data[0].token),
             storeData(STORAGE_KEYS.LOGGED_IN, 'true'),
             storeData(STORAGE_KEYS.USER_ROLE, data[0].user_role ?? ''),

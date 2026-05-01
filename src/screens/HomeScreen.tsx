@@ -70,6 +70,7 @@ const C = {
 
 const HomeScreen: React.FC<Props> = ({ navigation }) => {
   const [userName, setUserName] = useState<string | null>(null);
+  const [userCode, setUserCode] = useState<string | null>(null);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [loading, setLoading] = useState(true);
 
@@ -207,10 +208,12 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
   };
 
   const loadUserData = async () => {
-    const [name] = await Promise.all([
+    const [name, userCode] = await Promise.all([
       getData(STORAGE_KEYS.USER_NAME),
+      getData(STORAGE_KEYS.USER_CODE),
     ]);
     setUserName(name || 'User');
+    setUserCode(userCode || null);
   };
 
   const fetchTrackingData = async (date: Date) => {
@@ -341,6 +344,7 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
         <View style={{ width: '70%' }}>
           <Text style={styles.greeting}>Welcome 👋</Text>
           <Text numberOfLines={1} ellipsizeMode='tail' style={styles.userName}>{userName}</Text>
+          {userCode && <Text numberOfLines={1} ellipsizeMode='tail' style={styles.userCode}>Emp_Code : ({userCode})</Text>}
         </View>
         <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
           <LogOut size={16} color={C.textMuted} strokeWidth={1.5} />
@@ -591,6 +595,13 @@ const styles = StyleSheet.create({
     includeFontPadding: false,
     fontSize: FontSizes.xl,
     color: C.text,
+    letterSpacing: 0,
+  },
+  userCode: {
+    fontFamily: Fonts.medium,
+    includeFontPadding: false,
+    fontSize: FontSizes.xs,
+    color: C.textSecondary,
     letterSpacing: 0,
   },
   logoutBtn: {

@@ -4,6 +4,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 export const STORAGE_KEYS = {
   USER_ID: 'user_id',
   USER_NAME: 'user_name',
+  USER_CODE: 'user_code',
   TOKEN: 'token',
   USER_ROLE: 'user_role',
   RETAILER_ID: 'retailer_id',
